@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Palette from Image</title>
+<meta name="description" content="Extract a dominant color palette from any image, right in your browser. Drag and drop an image, get HEX swatches with copy buttons. The image never leaves your machine.">
+<link rel="canonical" href="https://0xelitesystem.github.io/color-palette-from-image/">
+<meta property="og:title" content="Color Palette from Image">
+<meta property="og:description" content="Extract a dominant color palette from any image locally. Drag and drop, get HEX swatches with copy buttons. Nothing leaves your browser.">
+<meta property="og:url" content="https://0xelitesystem.github.io/color-palette-from-image/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Color Palette from Image","applicationCategory":"DeveloperApplication","operatingSystem":"Any (browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://0xelitesystem.github.io/color-palette-from-image/","author":{"@type":"Person","name":"0xelitesystem","url":"https://elitesystem.ai"}}
+</script>
+<style>
+:root {
+  --bg: #fafaf6;
+  --surface: #ffffff;
+  --ink: #0a1d1e;
+  --ink-soft: #2c4a4c;
+  --rule: #c8d4d3;
+  --teal: #0f5c60;
+  --teal-deep: #0a4548;
+  --gold: #b07d2a;
+  --gold-deep: #8a611f;
+  --ok: #1a5c2e;
+  --warn: #8a5a00;
+  --err: #8b1a1a;
+  --code-bg: #f0ebe1;
+}
+[data-theme="dark"] {
+  --bg: #0c1c1d;
+  --surface: #14292a;
+  --ink: #e8ebe6;
+  --ink-soft: #b0c0bd;
+  --rule: #2a4042;
+  --teal: #4ab4ba;
+  --teal-deep: #6dc8ce;
+  --gold: #d4a155;
+  --gold-deep: #e6b876;
+  --ok: #6dd380;
+  --warn: #d4a155;
+  --err: #e88080;
+  --code-bg: #0a1718;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: ui-serif, Georgia, "Times New Roman", serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  line-height: 1.55;
+}
+.wrap { max-width: 1100px; margin: 0 auto; }
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 2px solid var(--teal);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--teal);
+}
+.tag {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.75rem;
+  color: var(--gold-deep);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+[data-theme="dark"] .tag { color: var(--gold); }
+.theme-btn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.theme-btn:hover { border-color: var(--teal); color: var(--teal); }
+.lede {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  margin-bottom: 1.75rem;
+  max-width: 60ch;
+}
+.input-box {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 1.25rem;
+  margin-bottom: 1.75rem;
+  border-radius: 3px;
+}
+label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.drop-zone {
+  border: 2px dashed var(--rule);
+  border-radius: 3px;
+  padding: 2.5rem 1.25rem;
+  text-align: center;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: var(--code-bg);
+}
+.drop-zone:hover { border-color: var(--teal); }
+.drop-zone.drag { border-color: var(--teal); background: var(--surface); }
+.drop-zone strong { color: var(--teal); font-weight: 600; }
+.drop-hint {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.75rem;
+  margin-top: 0.6rem;
+}
+.input-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+button {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 2px;
+}
+button:hover { border-color: var(--teal); }
+button.primary {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--surface);
+  font-weight: 600;
+}
+[data-theme="dark"] button.primary { color: var(--bg) !important; }
+button.primary:hover { background: var(--teal-deep); border-color: var(--teal-deep); }
+.count-ctl {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.count-ctl select {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 2px;
+}
+.privacy-note {
+  font-size: 0.78rem;
+  color: var(--gold-deep);
+  margin-top: 0.85rem;
+}
+[data-theme="dark"] .privacy-note { color: var(--gold); }
+.results { display: none; }
+.results.show { display: block; }
+.section {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: 3px;
+}
+.section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.85rem;
+}
+.preview-wrap { text-align: center; }
+.preview-wrap img {
+  max-width: 100%;
+  max-height: 340px;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.85rem;
+}
+.swatch {
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.swatch-color { height: 80px; }
+.swatch-body {
+  padding: 0.6rem 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.swatch-hex {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+.swatch-sub {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  padding: 0 0.7rem 0.6rem;
+}
+.copy-btn {
+  font-size: 0.72rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-radius: 2px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.copy-btn:hover { border-color: var(--teal); color: var(--teal); }
+.copy-all-row { margin-top: 1rem; }
+.error-msg {
+  color: var(--err);
+  font-size: 0.85rem;
+  margin-top: 0.85rem;
+  padding: 0.65rem;
+  background: var(--code-bg);
+  border-left: 3px solid var(--err);
+  border-radius: 2px;
+}
+footer {
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+footer a { color: var(--teal); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+@media (max-width: 640px) {
+  body { padding: 1rem 0.75rem; }
+  h1 { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Color Palette from Image</h1>
+    <div class="tag">Extract colors in your browser</div>
+  </div>
+  <button class="theme-btn" id="theme-toggle" type="button">Dark</button>
+</header>
+
+<p class="lede">Drop in an image and pull out its dominant color palette. Sampling and clustering run on a canvas in this page, so the image never leaves your machine.</p>
+
+<div class="input-box">
+  <label>Image</label>
+  <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload an image">
+    <div><strong>Drop an image here</strong> or click to choose a file</div>
+    <div class="drop-hint">PNG, JPG, WEBP, GIF, or any format your browser can render</div>
+  </div>
+  <input type="file" id="file-input" accept="image/*" hidden>
+  <div class="input-row">
+    <div class="count-ctl">
+      <label for="count-select" style="margin:0;">Colors</label>
+      <select id="count-select">
+        <option value="4">4</option>
+        <option value="6" selected>6</option>
+        <option value="8">8</option>
+        <option value="12">12</option>
+      </select>
+    </div>
+    <button id="clear-btn" type="button">Clear</button>
+  </div>
+  <div class="privacy-note">All processing happens locally. The image is read into a canvas and never uploaded anywhere.</div>
+</div>
+
+<div id="error-box"></div>
+
+<div class="results" id="results">
+  <div class="section">
+    <div class="section-title">Preview</div>
+    <div class="preview-wrap"><img id="preview" alt="Uploaded image preview"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Palette</div>
+    <div class="swatches" id="swatches"></div>
+    <div class="copy-all-row">
+      <button class="primary" id="copy-all-btn" type="button">Copy all HEX</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div>Color Palette from Image. Open source, MIT licensed. <a href="https://github.com/0xelitesystem/color-palette-from-image" target="_blank" rel="noopener">View source</a>.</div>
+  <div>Median cut quantization, vanilla JS.</div>
+</footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+// Theme toggle, respecting prefers-color-scheme for the initial state
+const themeBtn = $("theme-toggle");
+function setTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  themeBtn.textContent = t === "dark" ? "Light" : "Dark";
+}
+themeBtn.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") || "light";
+  setTheme(cur === "dark" ? "light" : "dark");
+});
+const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+setTheme(prefersDark ? "dark" : "light");
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function showError(msg) {
+  $("error-box").innerHTML = `<div class="error-msg">${escapeHtml(msg)}</div>`;
+  $("results").classList.remove("show");
+}
+function clearError() { $("error-box").innerHTML = ""; }
+
+function toHex(n) { return n.toString(16).padStart(2, "0"); }
+function rgbToHex(r, g, b) { return "#" + toHex(r) + toHex(g) + toHex(b); }
+
+// Median cut color quantization.
+// pixels: flat array of {r,g,b}. Returns `count` representative colors.
+function medianCut(pixels, count) {
+  if (pixels.length === 0) return [];
+  let buckets = [pixels];
+  while (buckets.length < count) {
+    // Find the bucket with the greatest color range along any channel.
+    let target = -1, targetRange = -1, targetChannel = "r";
+    for (let i = 0; i < buckets.length; i++) {
+      const b = buckets[i];
+      if (b.length < 2) continue;
+      let rMin = 255, rMax = 0, gMin = 255, gMax = 0, bMin = 255, bMax = 0;
+      for (const p of b) {
+        if (p.r < rMin) rMin = p.r; if (p.r > rMax) rMax = p.r;
+        if (p.g < gMin) gMin = p.g; if (p.g > gMax) gMax = p.g;
+        if (p.b < bMin) bMin = p.b; if (p.b > bMax) bMax = p.b;
+      }
+      const rangeR = rMax - rMin, rangeG = gMax - gMin, rangeB = bMax - bMin;
+      const maxRange = Math.max(rangeR, rangeG, rangeB);
+      if (maxRange > targetRange) {
+        targetRange = maxRange;
+        target = i;
+        targetChannel = rangeR === maxRange ? "r" : rangeG === maxRange ? "g" : "b";
+      }
+    }
+    if (target === -1) break; // no bucket can be split further
+    const bucket = buckets[target];
+    bucket.sort((a, b) => a[targetChannel] - b[targetChannel]);
+    const mid = Math.floor(bucket.length / 2);
+    const left = bucket.slice(0, mid);
+    const right = bucket.slice(mid);
+    buckets.splice(target, 1, left, right);
+  }
+  // Average each bucket into a single color, keep a weight for ordering.
+  const colors = buckets.filter(b => b.length).map(b => {
+    let r = 0, g = 0, bl = 0;
+    for (const p of b) { r += p.r; g += p.g; bl += p.b; }
+    return { r: Math.round(r / b.length), g: Math.round(g / b.length), b: Math.round(bl / b.length), weight: b.length };
+  });
+  colors.sort((a, b) => b.weight - a.weight);
+  return colors;
+}
+
+function luminance(r, g, b) {
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function extractPalette(img, count) {
+  const canvas = document.createElement("canvas");
+  // Downscale for performance while keeping enough pixels for good clustering.
+  const maxDim = 200;
+  let w = img.naturalWidth, h = img.naturalHeight;
+  if (w === 0 || h === 0) throw new Error("Image has no dimensions.");
+  const scale = Math.min(1, maxDim / Math.max(w, h));
+  w = Math.max(1, Math.round(w * scale));
+  h = Math.max(1, Math.round(h * scale));
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, w, h);
+  let data;
+  try {
+    data = ctx.getImageData(0, 0, w, h).data;
+  } catch (e) {
+    throw new Error("Could not read image pixels. This can happen with cross-origin images loaded from a URL.");
+  }
+  const pixels = [];
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3];
+    if (a < 125) continue; // skip mostly-transparent pixels
+    pixels.push({ r: data[i], g: data[i + 1], b: data[i + 2] });
+  }
+  if (pixels.length === 0) throw new Error("No opaque pixels found in this image.");
+  const colors = medianCut(pixels, count);
+  return colors.map(c => ({
+    hex: rgbToHex(c.r, c.g, c.b),
+    rgb: `rgb(${c.r}, ${c.g}, ${c.b})`,
+    lum: luminance(c.r, c.g, c.b)
+  }));
+}
+
+let lastPalette = [];
+
+function renderPalette(palette) {
+  const el = $("swatches");
+  el.innerHTML = "";
+  lastPalette = palette;
+  palette.forEach((c) => {
+    const textColor = c.lum > 140 ? "#0a1d1e" : "#ffffff";
+    const card = document.createElement("div");
+    card.className = "swatch";
+    const color = document.createElement("div");
+    color.className = "swatch-color";
+    color.style.background = c.hex;
+    const body = document.createElement("div");
+    body.className = "swatch-body";
+    const hex = document.createElement("span");
+    hex.className = "swatch-hex";
+    hex.textContent = c.hex;
+    const btn = document.createElement("button");
+    btn.className = "copy-btn";
+    btn.textContent = "Copy";
+    btn.addEventListener("click", () => copyText(c.hex, btn));
+    body.appendChild(hex);
+    body.appendChild(btn);
+    const sub = document.createElement("div");
+    sub.className = "swatch-sub";
+    sub.textContent = c.rgb;
+    card.appendChild(color);
+    card.appendChild(body);
+    card.appendChild(sub);
+    el.appendChild(card);
+  });
+}
+
+function copyText(text, btn) {
+  const done = () => { if (btn) { const o = btn.textContent; btn.textContent = "Copied"; setTimeout(() => btn.textContent = o, 1100); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch (e) {}
+  document.body.removeChild(ta);
+  if (done) done();
+}
+
+$("copy-all-btn").addEventListener("click", () => {
+  if (!lastPalette.length) return;
+  copyText(lastPalette.map(c => c.hex).join("\n"), $("copy-all-btn"));
+});
+
+function handleFile(file) {
+  clearError();
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    showError("That does not look like an image file.");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onerror = () => showError("Could not read that file.");
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const count = parseInt($("count-select").value, 10) || 6;
+        const palette = extractPalette(img, count);
+        $("preview").src = e.target.result;
+        renderPalette(palette);
+        $("results").classList.add("show");
+      } catch (err) {
+        showError(err.message || "Failed to extract a palette.");
+      }
+    };
+    img.onerror = () => showError("The browser could not decode that image.");
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+let currentFile = null;
+function reprocess() {
+  if (currentFile) handleFile(currentFile);
+}
+
+const dz = $("drop-zone");
+dz.addEventListener("click", () => $("file-input").click());
+dz.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file-input").click(); } });
+dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("drag"); });
+dz.addEventListener("dragleave", () => dz.classList.remove("drag"));
+dz.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dz.classList.remove("drag");
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) { currentFile = f; handleFile(f); }
+});
+$("file-input").addEventListener("change", (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (f) { currentFile = f; handleFile(f); }
+});
+$("count-select").addEventListener("change", reprocess);
+$("clear-btn").addEventListener("click", () => {
+  currentFile = null;
+  $("file-input").value = "";
+  $("results").classList.remove("show");
+  clearError();
+  lastPalette = [];
+});
+</script>
+</body>
+</html>
