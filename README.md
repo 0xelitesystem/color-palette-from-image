@@ -1,8 +1,8 @@
-# Color Palette from Image
+# Image Dominant Palette
 
 Extract a dominant color palette from any image, right in your browser. No server, no tracking, no third-party scripts.
 
-**Live demo:** https://0xelitesystem.github.io/color-palette-from-image/
+**Live demo:** https://0xelitesystem.github.io/image-dominant-palette/
 
 ## Use
 
@@ -28,8 +28,8 @@ Everything runs in your browser. The image is read into a canvas with FileReader
 ## Run locally
 
 ```bash
-git clone https://github.com/0xelitesystem/color-palette-from-image
-cd color-palette-from-image
+git clone https://github.com/0xelitesystem/image-dominant-palette
+cd image-dominant-palette
 # Open index.html in your browser, or:
 python -m http.server 8000
 ```
